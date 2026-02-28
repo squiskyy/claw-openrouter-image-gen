@@ -68,14 +68,14 @@ def request_images(
     prompt: str,
     model: str = "google/gemini-3.1-flash-image-preview",
 ) -> dict:
-    """Generate an image via OpenRouter API. Tries image modality first, falls back to standard API."""
+    """Generate an image via OpenRouter API. Tries image+text modality first, falls back to image only."""
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     
-    # First try with image modality
+    # First try with image + text modality
     payload = {
         "model": model,
         "messages": [
@@ -84,7 +84,7 @@ def request_images(
                 "content": prompt,
             }
         ],
-        "modalities": ["image"],
+        "modalities": ["image", "text"],
     }
     
     try:
@@ -98,9 +98,9 @@ def request_images(
         with urllib.request.urlopen(req, timeout=300) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
-        # If 404 or unsupported modality, fall back to standard API
+        # If 404 or unsupported modality, fall back to image only
         if e.code == 404:
-            # Retry without modalities parameter
+            # Retry with image-only modality
             payload = {
                 "model": model,
                 "messages": [
@@ -109,6 +109,7 @@ def request_images(
                         "content": prompt,
                     }
                 ],
+                "modalities": ["image"],
             }
             body = json.dumps(payload).encode("utf-8")
             req = urllib.request.Request(
