@@ -25,7 +25,7 @@ def default_out_dir() -> Path:
     preferred = Path.home() / "Projects" / "tmp"
     base = preferred if preferred.is_dir() else Path("./tmp")
     base.mkdir(parents=True, exist_ok=True)
-    return base / f"clow-openrouter-image-gen-{now}"
+    return base / f"claw-openrouter-image-gen-{now}"
 
 
 def pick_prompts(count: int) -> list[str]:
@@ -138,7 +138,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Generate images via OpenRouter API.")
     ap.add_argument("--prompt", help="Single prompt. If omitted, random prompts are generated.")
     ap.add_argument("--count", type=int, default=8, help="How many images to generate.")
-    ap.add_argument("--model", default="google/gemini-2.5-flash-image-preview", help="Image model id.")
+    ap.add_argument("--model", default="google/gemini-3.1-flash-image-preview", help="Image model id (default: google/gemini-3.1-flash-image-preview).")
     ap.add_argument("--out-dir", default="", help="Output directory (default: ./tmp/claw-openrouter-image-gen-<ts>).")
     args = ap.parse_args()
 
