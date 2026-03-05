@@ -28,13 +28,42 @@ from pathlib import Path
 # Constants
 # ============================================================================
 
-DEFAULT_MODEL = "google/gemini-3.1-flash-image-preview"
+DEFAULT_MODEL = "arc:image"  # Default to local LiteLLM model
 DEFAULT_IMAGE_SIZE = "1024x1024"
+DEFAULT_API_METHOD = "images"  # Default to images/generations API
 API_TIMEOUT = 300
 
 # Default base URL - can be overridden via OPENROUTER_BASE_URL env var
 # If not set, defaults to OpenRouter; append appropriate endpoint path
 DEFAULT_BASE_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+
+
+def load_env_file() -> None:
+    """Load environment variables from .env file in script directory."""
+    script_dir = Path(__file__).parent.parent
+    env_file = script_dir / ".env"
+    
+    if not env_file.exists():
+        return
+    
+    # Read and parse .env file
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        # Skip comments and empty lines
+        if not line or line.startswith("#"):
+            continue
+        # Parse KEY=VALUE
+        if "=" in line:
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            # Only set if not already in environment
+            if key not in os.environ:
+                os.environ[key] = value
+
+
+# Load .env file on module import
+load_env_file()
 
 # ============================================================================
 # Data Classes
@@ -284,8 +313,8 @@ def main() -> int:
     parser.add_argument(
         "--api-method",
         choices=["chat", "images"],
-        default="chat",
-        help="API method to use: 'chat' for /v1/chat/completions (default), 'images' for /v1/images/generations"
+        default=DEFAULT_API_METHOD,
+        help=f"API method to use: 'chat' for /v1/chat/completions, 'images' for /v1/images/generations (default: {DEFAULT_API_METHOD})"
     )
     parser.add_argument(
         "--image-size",

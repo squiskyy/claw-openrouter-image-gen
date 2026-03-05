@@ -1,5 +1,5 @@
 name: openrouter-image-gen
-description: Batch-generate images via OpenRouter API or local LiteLLM. Supports chat completions and images/generations API methods.
+description: Batch-generate images via OpenRouter API or local LiteLLM. Uses images/generations API by default with local LiteLLM for free inference.
 homepage: https://openrouter.ai/docs/guides/overview/multimodal/image-generation
 metadata:
   {
@@ -24,66 +24,86 @@ metadata:
 
 Generate images via OpenRouter's API or local LiteLLM deployment.
 
-## Run
+## Quick Start
 
 ```bash
-python3 {baseDir}/scripts/gen.py
-open ~/Projects/tmp/claw-openrouter-image-gen-*/index.html  # if ~/Projects/tmp exists; else ./tmp/...
+cd {baseDir}
+python3 scripts/gen.py --prompt "A cute cartoon penguin wearing sunglasses"
 ```
+
+This uses the **local LiteLLM** endpoint by default (free!) via the `.env` file.
+
+## Environment Setup
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+# Edit .env with your API key and base URL
+```
+
+Or set environment variables:
+
+```bash
+export OPENROUTER_API_KEY="your-key"
+export OPENROUTER_BASE_URL="https://api.ai.create.kcl.ac.uk"
+```
+
+## Usage
+
+```bash
+# Generate an image (default: 1 image, local LiteLLM via .env)
+python3 scripts/gen.py --prompt "cute cartoon penguin"
+
+# Generate multiple images with different seeds
+python3 scripts/gen.py --prompt "cute cartoon penguin" --count 4 --seed 1000
+
+# Use a different model
+python3 scripts/gen.py --prompt "cute cartoon penguin" --model flux-9b
+
+# Use OpenRouter instead of local (costs money!)
+OPENROUTER_BASE_URL="https://openrouter.ai/api/v1" python3 scripts/gen.py --api-method chat --model google/gemini-3.1-flash-image-preview --prompt "cute cartoon penguin"
+```
+
+## Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--prompt` | (random) | Prompt for image generation |
+| `--count` | 1 | Number of images to generate |
+| `--seed` | none | Starting seed (increments for each image) |
+| `--model` | arc:image | Model ID to use |
+| `--api-method` | images | `chat` or `images` API method |
+| `--image-size` | 1024x1024 | Image size (for images API) |
+| `--out-dir` | ./tmp/... | Output directory |
 
 ## API Methods
 
-### Method 1: Chat Completions (default)
-Uses `/v1/chat/completions` with `modalities` parameter. Best for OpenRouter.
+### images (default, recommended)
+Uses `/v1/images/generations` - compatible with local LiteLLM and OpenAI models.
 
-```bash
-python3 {baseDir}/scripts/gen.py --api-method chat --model google/gemini-3.1-flash-image-preview
-```
+Best for: Local deployment with Flux, Arc, DALL-E, etc.
 
-### Method 2: Images Generations
-Uses `/v1/images/generations` endpoint. Best for local LiteLLM with Flux or similar models.
+### chat
+Uses `/v1/chat/completions` with modalities parameter - OpenRouter-specific.
 
-```bash
-python3 {baseDir}/scripts/gen.py --api-method images --model flux-9b --image-size 1024x1024
-```
-
-## Useful Flags
-
-```bash
-# Generate multiple images with random prompts
-python3 {baseDir}/scripts/gen.py --count 16
-
-# Single prompt
-python3 {baseDir}/scripts/gen.py --prompt "ultra-detailed studio photo of a lobster astronaut" --count 4
-
-# Custom output directory
-python3 {baseDir}/scripts/gen.py --out-dir ./out/images
-
-# Use images/generations API (for local Flux deployment)
-python3 {baseDir}/scripts/gen.py --api-method images --model flux-9b --prompt "a cute cartoon penguin"
-
-# Different image sizes (images API only)
-python3 {baseDir}/scripts/gen.py --api-method images --model flux-9b --image-size 1792x1024 --prompt "landscape image"
-```
+Best for: OpenRouter models like Gemini 3.1 Flash, Riverflow, Seedream.
 
 ## Supported Models
 
-### Chat Completions (default):
-- `google/gemini-3.1-flash-image-preview` (default, fastest)
+### Local LiteLLM (via .env):
+- `arc:image` (default, works great for cartoons!)
+- `flux-9b` (if deployed)
+- `gpt-image-1` (via OpenRouter)
+- Any model deployed behind your LiteLLM
+
+### OpenRouter (chat completions):
+- `google/gemini-3.1-flash-image-preview` (fastest)
 - `sourceful/riverflow-v2-pro`
 - `sourceful/riverflow-v2-fast`
-- `black-forest-labs/flux.2-klein-4b`
 - `black-forest-labs/flux.2-max`
-- `black-forest-labs/flux.2-pro`
-- `black-forest-labs/flux.2-flex`
 - `bytedance-seed/seedream-4.5`
 - `openai/gpt-5-image`
-
-### Images Generations:
-- Any model deployed behind LiteLLM that supports `/v1/images/generations`
-- `flux-9b` (local)
-- `gpt-image-1` (OpenAI via OpenRouter)
-- `dall-e-3` (OpenAI via OpenRouter)
 
 ## Output
 
@@ -91,30 +111,19 @@ python3 {baseDir}/scripts/gen.py --api-method images --model flux-9b --image-siz
 - `prompts.json` (prompt → file mapping)
 - `index.html` (thumbnail gallery)
 
-## Environment Variables
+## Examples
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `OPENROUTER_API_KEY` | Yes | - | Your OpenRouter API key (or dummy for local) |
-| `OPENROUTER_BASE_URL` | No | `https://openrouter.ai/api/v1` | Base URL for API (scheme://host:port/path) |
-
-### Using a Local Endpoint
-
-To use a local LiteLLM instance instead of OpenRouter:
-
+### Penguin with laptop (simple prompt - works great with arc:image)
 ```bash
-# For chat completions API
-export OPENROUTER_API_KEY="sk-dummy"  # LiteLLM doesn't need real key for local
-export OPENROUTER_BASE_URL="http://your-lite-llm-host:4000"
-python3 {baseDir}/scripts/gen.py --api-method chat --model flux-9b --prompt "your prompt"
-
-# For images/generations API (recommended for Flux)
-export OPENROUTER_API_KEY="sk-dummy"
-export OPENROUTER_BASE_URL="http://your-lite-llm-host:4000"
-python3 {baseDir}/scripts/gen.py --api-method images --model flux-9b --prompt "cute cartoon penguin"
+python3 scripts/gen.py --prompt "cute friendly cartoon penguin wearing sunglasses and sitting at a laptop computer, gradient colorful background, modern profile photo style"
 ```
 
-## API Reference
+### Penguin with sweater and geometric background (detailed prompt)
+```bash
+python3 scripts/gen.py --prompt "A cute, soft-3D cartoon illustration of a penguin wearing a cozy knitted sweater and sitting at a laptop, working. The background is a vibrant modern gradient transitioning from warm coral to cool teal, featuring subtle floating geometric vector shapes like triangles and circles, soft bokeh light effects"
+```
 
-- [OpenRouter Image Generation Docs](https://openrouter.ai/docs/guides/overview/multimodal/image-generation)
-- [OpenAI Images Generations API](https://platform.openai.com/docs/api-reference/images/generate)
+### Sea otter (arc:image handles simple prompts beautifully!)
+```bash
+python3 scripts/gen.py --prompt "A cute baby sea otter"
+```
