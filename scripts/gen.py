@@ -278,7 +278,7 @@ def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Generate images via OpenRouter API.")
     parser.add_argument("--prompt", help="Single prompt. If omitted, random prompts are generated.")
-    parser.add_argument("--count", type=int, default=8, help="How many images to generate.")
+    parser.add_argument("--count", type=int, default=1, help="How many images to generate (default: 1).")
     parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Image model id (default: {DEFAULT_MODEL}).")
     parser.add_argument("--out-dir", default="", help="Output directory (default: ./tmp/claw-openrouter-image-gen-<ts>).")
     parser.add_argument(
