@@ -5,8 +5,9 @@ metadata:
   {
     "openclaw": {
       "emoji": "🖼️",
-      "requires": { "bins": ["python3"], "env": ["OPENROUTER_API_KEY"] },
+      "requires": { "bins": ["python3"], "env": ["OPENROUTER_API_KEY", "OPENROUTER_API_URL"] },
       "primaryEnv": "OPENROUTER_API_KEY",
+      "optionalEnv": ["OPENROUTER_API_URL"],
       "install": [
         {
           "id": "python-brew",
@@ -72,3 +73,20 @@ python3 {baseDir}/scripts/gen.py --model black-forest-labs/flux.2-pro --count 4
 ## API Reference
 
 See [OpenRouter Image Generation Docs](https://openrouter.ai/docs/guides/overview/multimodal/image-generation) for more information.
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `OPENROUTER_API_KEY` | Yes | - | Your OpenRouter API key |
+| `OPENROUTER_API_URL` | No | `https://openrouter.ai/api/v1/chat/completions` | Override API endpoint (e.g., for local LiteLLM deployment) |
+
+### Using a Local Endpoint
+
+To use a local LiteLLM instance instead of OpenRouter:
+
+```bash
+export OPENROUTER_API_KEY="sk-dummy"  # LiteLLM doesn't need real key for local
+export OPENROUTER_API_URL="http://your-lite-llm-host:4000"
+python3 {baseDir}/scripts/gen.py --model flux-9b --prompt "your prompt"
+```

@@ -27,7 +27,7 @@ from typing import NamedTuple
 # ============================================================================
 
 DEFAULT_MODEL = "google/gemini-3.1-flash-image-preview"
-API_URL = "https://openrouter.ai/api/v1/chat/completions"
+API_URL = os.environ.get("OPENROUTER_API_URL", "https://openrouter.ai/api/v1/chat/completions")
 API_TIMEOUT = 300
 
 # ============================================================================
